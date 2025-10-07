@@ -1,0 +1,16 @@
+"visit_date","visitors_count","utm_source","utm_medium","utm_campaign","total_cost","leads_count","purchases_count","revenue"
+2023-06-01,130,yandex,cpc,freemium,138240,130,46,3222082
+2023-06-01,126,vk,cpc,freemium-frontend,139578,82,11,597747
+2023-06-01,100,admitad,cpa,admitad,0,0,0,0
+2023-06-01,97,vk,cpc,prof-python,72512,66,7,588004
+2023-06-01,96,yandex,cpc,prof-frontend,278847,96,147,22658215
+2023-06-01,83,vk,cpc,base-python,46475,60,2,32072
+2023-06-01,82,vk,cpc,prof-java,66123,50,3,383918
+2023-06-01,82,yandex,cpc,prof-python,195909,82,53,2484947
+2023-06-01,76,vk,cpc,prof-data-analytics,38592,56,11,706594
+2023-06-01,72,vk,cpc,freemium-java,13636,53,0,0
+2023-06-01,66,vk,cpc,freemium-python,40180,45,6,498372
+2023-06-01,61,yandex,cpc,prof-java,196637,61,42,3058247
+2023-06-01,54,yandex,cpc,base-frontend,111898,54,15,972360
+2023-06-01,44,telegram,cpp,base-python,0,0,0,0
+2023-06-01,38,telegram,cpp,base-java,0,1,0,0

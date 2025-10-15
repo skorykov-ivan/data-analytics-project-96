@@ -1,14 +1,28 @@
-select distinct
+with last_visits as (
+    select
+        visitor_id,
+        MAX(visit_date) as last_date
+    from sessions
+    where medium != 'organic'
+    group by visitor_id
+)
+
+select
     s.visitor_id,
-    s.visit_date,
-    s.source,
+    lv.last_date as visit_date,
+    s.source as utm_source,
+    s.medium as utm_medium,
+    s.campaign as utm_campaign,
     l.lead_id,
     l.created_at,
     l.amount,
     l.closing_reason,
     l.status_id
 from sessions as s
-left join leads as l using(visitor_id)
-where cast(visit_date as date) = cast(created_at as date) or
-	  l.created_at is null
-order by l.amount desc nulls last, s.visit_date, s.source limit 10;
+inner join last_visits as lv on s.visitor_id = lv.visitor_id and
+                               s.visit_date = lv.last_date
+left join leads as l on s.visitor_id = l.visitor_id and
+                        s.visit_date <= l.created_at
+
+where medium != 'organic'
+order by amount desc nulls last, visit_date, utm_source, utm_medium, utm_campaign limit 10;

@@ -4,46 +4,48 @@ with last_visits as (
         max(visit_date) as last_date
     from sessions
     where medium != 'organic'
-    group by visitor_id    
+    group by visitor_id
 ),
 
 tbl_aggr as (
     select
-        date(lv.last_date) as visit_date,
         s.source as utm_source,
         s.medium as utm_medium,
         s.campaign as utm_campaign,
+        date(lv.last_date) as visit_date,
         count(distinct s.visitor_id) as visitors_count,
         count(distinct l.lead_id) as leads_count,
         count(distinct s.visitor_id) filter (where status_id = 142) as purchases_count,
-        sum(amount) as revenue
+        sum(l.amount) as revenue
     from last_visits as lv
-    inner join sessions as s on lv.visitor_id = s.visitor_id and
-                                    lv.last_date = s.visit_date
-    left join leads as l on lv.visitor_id = l.visitor_id and
-                            lv.last_date <= l.created_at
+    inner join sessions as s
+            on lv.visitor_id = s.visitor_id
+            and lv.last_date = s.visit_date
+    left join leads as l
+            on lv.visitor_id = l.visitor_id
+            and lv.last_date <= l.created_at
     group by date(lv.last_date), s.source, s.medium, s.campaign
 ),
 
-tbl_ads as(
+tbl_ads as (
     select
         date(campaign_date) as campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
         sum(daily_spent) as total_cost
-    from vk_ads as vk
+    from vk_ads
     group by utm_source, utm_medium, utm_campaign, date(campaign_date)
-    
+
     union
+
     select
-    
         date(campaign_date) as campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
         sum(daily_spent) as total_cost
-    from ya_ads as ya
+    from ya_ads
     group by utm_source, utm_medium, utm_campaign, date(campaign_date)
 )
 
@@ -58,10 +60,11 @@ select
     t_ag.purchases_count,
     t_ag.revenue
 from tbl_aggr as t_ag
-left join tbl_ads as ads on t_ag.visit_date = ads.campaign_date and
-                            t_ag.utm_source = ads.utm_source and
-                            t_ag.utm_medium = ads.utm_medium and
-                            t_ag.utm_campaign = ads.utm_campaign
+left join tbl_ads as ads
+    on t_ag.visit_date = ads.campaign_date
+    and t_ag.utm_source = ads.utm_source
+    and t_ag.utm_medium = ads.utm_medium
+    and t_ag.utm_campaign = ads.utm_campaign
 
-order by t_ag.revenue desc nulls last, t_ag.visit_date, t_ag.visitors_count desc, t_ag.utm_source, t_ag.utm_medium, t_ag.utm_campaign
-limit 15;
+order by t_ag.revenue desc nulls last, t_ag.visit_date asc,
+    t_ag.visitors_count desc, t_ag.utm_source asc, t_ag.utm_medium asc, t_ag.utm_campaign asc limit 15;

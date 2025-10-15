@@ -1,7 +1,7 @@
 with last_visits as (
     select
         visitor_id,
-        MAX(visit_date) as last_date
+        max(visit_date) as last_date
     from sessions
     where medium != 'organic'
     group by visitor_id
@@ -19,10 +19,12 @@ select
     l.closing_reason,
     l.status_id
 from sessions as s
-inner join last_visits as lv on s.visitor_id = lv.visitor_id and
-                               s.visit_date = lv.last_date
-left join leads as l on s.visitor_id = l.visitor_id and
-                        s.visit_date <= l.created_at
-
+inner join last_visits as lv
+        on s.visitor_id = lv.visitor_id
+        and .visit_date = lv.last_date
+left join leads as l
+        on s.visitor_id = l.visitor_id
+        and s.visit_date <= l.created_at
 where medium != 'organic'
-order by amount desc nulls last, visit_date, utm_source, utm_medium, utm_campaign limit 10;
+order by l.amount desc nulls last, visit_date asc, utm_source asc,
+    utm_medium asc, utm_campaign asc limit 10;

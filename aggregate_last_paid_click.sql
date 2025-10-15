@@ -17,7 +17,7 @@ tbl_aggr as (
         count(distinct l.lead_id) as leads_count,
         count(distinct s.visitor_id) filter (
             where l.status_id = 142
-            ) as purchases_count,
+        ) as purchases_count,
         sum(l.amount) as revenue
     from last_visits as lv
     inner join sessions as s

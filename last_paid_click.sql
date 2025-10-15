@@ -24,5 +24,7 @@ inner join last_visits as lv
 left join leads as l
     on s.visitor_id = l.visitor_id and s.visit_date <= l.created_at
 where s.medium != 'organic'
-order by l.amount desc nulls last, visit_date asc, utm_source asc,
-    utm_medium asc, utm_campaign asc limit 10;
+order by
+    l.amount desc nulls last, visit_date asc, utm_source asc,
+    utm_medium asc, utm_campaign asc
+limit 10;

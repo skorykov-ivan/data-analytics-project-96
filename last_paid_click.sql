@@ -20,11 +20,9 @@ select
     l.status_id
 from sessions as s
 inner join last_visits as lv
-        on s.visitor_id = lv.visitor_id
-        and .visit_date = lv.last_date
+    on s.visitor_id = lv.visitor_id and s.visit_date = lv.last_date
 left join leads as l
-        on s.visitor_id = l.visitor_id
-        and s.visit_date <= l.created_at
-where medium != 'organic'
+    on s.visitor_id = l.visitor_id and s.visit_date <= l.created_at
+where s.medium != 'organic'
 order by l.amount desc nulls last, visit_date asc, utm_source asc,
     utm_medium asc, utm_campaign asc limit 10;

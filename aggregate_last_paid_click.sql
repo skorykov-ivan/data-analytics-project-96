@@ -15,15 +15,14 @@ tbl_aggr as (
         date(lv.last_date) as visit_date,
         count(distinct s.visitor_id) as visitors_count,
         count(distinct l.lead_id) as leads_count,
-        count(distinct s.visitor_id) filter (where status_id = 142) as purchases_count,
+        count(distinct s.visitor_id) filter (
+            where l.status_id = 142) as purchases_count,
         sum(l.amount) as revenue
     from last_visits as lv
     inner join sessions as s
-            on lv.visitor_id = s.visitor_id
-            and lv.last_date = s.visit_date
+        on lv.visitor_id = s.visitor_id and lv.last_date = s.visit_date
     left join leads as l
-            on lv.visitor_id = l.visitor_id
-            and lv.last_date <= l.created_at
+        on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
     group by date(lv.last_date), s.source, s.medium, s.campaign
 ),
 
@@ -62,9 +61,10 @@ select
 from tbl_aggr as t_ag
 left join tbl_ads as ads
     on t_ag.visit_date = ads.campaign_date
-    and t_ag.utm_source = ads.utm_source
-    and t_ag.utm_medium = ads.utm_medium
-    and t_ag.utm_campaign = ads.utm_campaign
-
+        and t_ag.utm_source = ads.utm_source
+        and t_ag.utm_medium = ads.utm_medium
+        and t_ag.utm_campaign = ads.utm_campaign
 order by t_ag.revenue desc nulls last, t_ag.visit_date asc,
-    t_ag.visitors_count desc, t_ag.utm_source asc, t_ag.utm_medium asc, t_ag.utm_campaign asc limit 15;
+    t_ag.visitors_count desc, t_ag.utm_source asc,
+        t_ag.utm_medium asc, t_ag.utm_campaign asc
+limit 15;

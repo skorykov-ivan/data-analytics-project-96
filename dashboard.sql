@@ -1,13 +1,13 @@
 --------- Основная таблица для запросов с платной рекламой
 --------- нет пометки'(без оплаты за рекламу)'
 --------- Оборачиваем всю таблицу в CTE tbl_answ
---with tbl_answ as (
+-- with tbl_answ as (
 with last_visits as (
     select
         visitor_id,
         max(visit_date) as last_date
-	from sessions
-	where medium != 'organic'
+    from sessions
+    where medium != 'organic'
     group by visitor_id
 ),
 
@@ -74,11 +74,11 @@ where t_ag.utm_source in ('yandex', 'vk')
 order by
     t_ag.revenue desc nulls last, t_ag.visit_date asc,
     t_ag.visitors_count desc, t_ag.utm_source asc,
-    t_ag.utm_medium asc, t_ag.utm_campaign asc
+    t_ag.utm_medium asc, t_ag.utm_campaign asc;
 --------- Основная таблица для запросов без оплаты за рекламу
 --------- с пометкой '(без оплаты за рекламу)'
 --------- оборачиваем всю таблицу в CTE tbl_free
---with tbl_free as (
+-- with tbl_free as (
 with last_visits as (
     select
         visitor_id,
@@ -102,7 +102,7 @@ inner join sessions as s
     on lv.visitor_id = s.visitor_id and lv.last_date = s.visit_date
 left join leads as l
     on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
-group by date(lv.last_date), s.source
+group by date(lv.last_date), s.source;
 --------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
     visit_date,
@@ -261,7 +261,7 @@ select
 from tbl_answ
 group by utm_source;
 --------- 11 таблица - cpu, cpl, cppu, roi по utm_campaign
-,
+----- нужно поставить запятую после CTE tbl_answ
 tbl_cost_revenue_utm_campaign as (
 	select
 	    utm_source,
@@ -270,11 +270,11 @@ tbl_cost_revenue_utm_campaign as (
 	    sum(visitors_count) as visitors_count,
 	    sum(leads_count) as leads_count,
 	    sum(purchases_count) as purchases_count,
-	    sum(case when total_cost is null then 0 else total_cost end) as total_cost,
-	    sum(case when revenue is null then 0 else revenue end) as revenue
+	    coalesce(sum(total_cost), 0) as total_cost,
+	    coalesce(sum(revenue), 0) as revenue
 	from tbl_answ
 	group by utm_source, utm_medium, utm_campaign
-	having sum(case when total_cost is null then 0 else total_cost end) > 0
+	having coalesce(sum(total_cost), 0) > 0
 	order by
 	    visitors_count desc,
 	    leads_count desc,

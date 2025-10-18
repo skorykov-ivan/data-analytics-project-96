@@ -7,7 +7,8 @@ select
     sum(purchases_count) as purchases_count
 from tbl_answ
 group by visit_date, utm_source
-order by visit_date, visitors_count desc, leads_count desc, purchases_count desc;
+order by
+    visit_date asc, visitors_count desc, leads_count desc, purchases_count desc;
 --------- 1.1 таблица по дням (без оплаты за рекламу)
 select
     visit_date,
@@ -19,6 +20,7 @@ group by visit_date
 order by visitors_count desc, leads_count desc, purchases_count desc;
 --------- 2 таблица по дням недели
 select
+    utm_source,
     extract(isodow from visit_date) as sort,
     to_char(visit_date, 'Day') as wkd,
     case extract(isodow from visit_date)
@@ -30,15 +32,16 @@ select
         when 6 then 'Суббота'
         when 7 then 'Воскресенье'
     end as russian_day,
-    utm_source,
     sum(visitors_count) as visitors_count,
     sum(leads_count) as leads_count,
     sum(purchases_count) as purchases_count
 from tbl_answ
 group by wkd, extract(isodow from visit_date), utm_source
-order by extract(isodow from visit_date), visitors_count desc, leads_count desc;
+order by
+    extract(isodow from visit_date), visitors_count desc, leads_count desc;
 --------- 2.1 таблица по дням недели (без оплаты за рекламу)
 select
+    utm_source,
     extract(isodow from visit_date) as sort,
     to_char(visit_date, 'Day') as wkd,
     case extract(isodow from visit_date)
@@ -50,13 +53,13 @@ select
         when 6 then 'Суббота'
         when 7 then 'Воскресенье'
     end as russian_day,
-    utm_source,
     sum(visitors_count) as visitors_count,
     sum(leads_count) as leads_count,
     sum(purchases_count) as purchases_count
 from tbl_free
 group by wkd, extract(isodow from visit_date), utm_source
-order by extract(isodow from visit_date), visitors_count desc, leads_count desc;
+order by
+    extract(isodow from visit_date) asc, visitors_count desc, leads_count desc;
 --------- 3.1 таблица по месяцам (без оплаты за рекламу)
 select
     visit_date,
@@ -70,7 +73,7 @@ order by visitors_count desc, leads_count desc, purchases_count desc;
 --------- 4.1 таблица - воронка (без оплаты рекламы)
 select
     'Пользователи' as stage,
-    sum(visitors_count) as count
+    sum(visitors_count) as count_all
 from tbl_free
 
 union all
@@ -86,10 +89,11 @@ select
     'Покупатели' as stage,
     sum(purchases_count) as purchases_count
 from tbl_free;
---------- 4 таблица - воронка + 5 и 6 таблицы - воронки с фильтрами where тут по яндексу/вконтакте
+--------- 4 таблица - воронка + 5 и 6 таблицы
+--------- воронки с фильтрами where тут по = 'yandex' / 'vk''
 select
     'Пользователи' as stage,
-    sum(visitors_count) as count
+    sum(visitors_count) as count_all
 from tbl_answ
 
 union all
@@ -131,7 +135,7 @@ select
 from tbl_answ
 group by visit_date, utm_source
 having sum(total_cost) > 0
-order by visit_date, daily_spent desc;
+order by visit_date asc, daily_spent desc;
 
 --------- 9 таблица - затраты на рекл \ прибыль
 select
@@ -277,6 +281,9 @@ with tbl_answ as (
 	    t_ag.visitors_count desc, t_ag.utm_source asc,
 	    t_ag.utm_medium asc, t_ag.utm_campaign asc
 )
+
+select *
+from tbl_answ
 --------- Основная таблица для запросов без оплаты за рекламу
 --------- с пометкой '(без оплаты за рекламу)'
 with tbl_free as (
@@ -305,3 +312,6 @@ with tbl_free as (
 	    on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
 	group by date(lv.last_date), s.source
 )
+
+select *
+from tbl_free

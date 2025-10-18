@@ -263,22 +263,22 @@ group by utm_source;
 --------- 11 таблица - cpu, cpl, cppu, roi по utm_campaign
 ----- нужно поставить запятую после CTE tbl_answ и убрать тут with
 with tbl_cost_revenue_utm_campaign as (
-	select
-	    utm_source,
-	    utm_medium,
-	    utm_campaign,
-	    sum(visitors_count) as visitors_count,
-	    sum(leads_count) as leads_count,
-	    sum(purchases_count) as purchases_count,
-	    coalesce(sum(total_cost), 0) as total_cost,
-	    coalesce(sum(revenue), 0) as revenue
-	from tbl_answ
-	group by utm_source, utm_medium, utm_campaign
-	having coalesce(sum(total_cost), 0) > 0
-	order by
-	    visitors_count desc,
-	    leads_count desc,
-	    purchases_count desc
+    select
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        sum(visitors_count) as visitors_count,
+        sum(leads_count) as leads_count,
+        sum(purchases_count) as purchases_count,
+        coalesce(sum(total_cost), 0) as total_cost,
+        coalesce(sum(revenue), 0) as revenue
+    from tbl_answ
+    group by utm_source, utm_medium, utm_campaign
+    having coalesce(sum(total_cost), 0) > 0
+    order by
+        visitors_count desc,
+        leads_count desc,
+        purchases_count desc
 )
 
 select
@@ -291,20 +291,20 @@ select
     total_cost,
     revenue,
     case
-    	when visitors_count = 0 then 0
-    	else round(total_cost / visitors_count, 2)
+        when visitors_count = 0 then 0
+        else round(total_cost / visitors_count, 2)
     end as cpu,
     case
-    	when leads_count = 0 then 0
-    	else round(total_cost / leads_count, 2)
+        when leads_count = 0 then 0
+        else round(total_cost / leads_count, 2)
     end as cpl,
     case
-    	when purchases_count = 0 then 0
-    	else round(total_cost / purchases_count, 2)
+        when purchases_count = 0 then 0
+        else round(total_cost / purchases_count, 2)
     end as cppu,
     case
-    	when total_cost = 0 then 0
-    	else round((revenue - total_cost) / total_cost * 100, 2)
+        when total_cost = 0 then 0
+        else round((revenue - total_cost) / total_cost * 100, 2)
     end as roi,
     (revenue - total_cost) as net_profit
 from tbl_cost_revenue_utm_campaign

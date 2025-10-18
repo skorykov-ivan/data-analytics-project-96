@@ -1,9 +1,10 @@
---------- Основная таблица для запросов с платной рекламой - нет пометки '(без оплаты за рекламу)''
+--------- Основная таблица для запросов с платной рекламой
+--------- нет пометки'(без оплаты за рекламу)'
 with tbl_answ as (
-	with last_visits as (
-	    select
-	        visitor_id,
-	        max(visit_date) as last_date
+    with last_visits as (
+        select
+            visitor_id,
+            max(visit_date) as last_date
 	    from sessions
 	    where medium != 'organic'
 	    group by visitor_id
@@ -74,7 +75,8 @@ with tbl_answ as (
 	    t_ag.visitors_count desc, t_ag.utm_source asc,
 	    t_ag.utm_medium asc, t_ag.utm_campaign asc
 )
---------- Основная таблица для запросов без оплаты за рекламу - с пометкой '(без оплаты за рекламу)'
+--------- Основная таблица для запросов без оплаты за рекламу
+--------- с пометкой '(без оплаты за рекламу)'
 with tbl_free as (
 	with last_visits as (
 	    select
@@ -101,7 +103,7 @@ with tbl_free as (
 	    on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
 	group by date(lv.last_date), s.source
 )
------------------------------------------------------ 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
+--------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
     visit_date,
     utm_source,
@@ -111,7 +113,7 @@ select
 from tbl_answ
 group by visit_date, utm_source
 order by visit_date, visitors_count desc, leads_count desc, purchases_count desc;
------------------------------------------------------ 1.1 таблица по дням (без оплаты за рекламу)
+--------- 1.1 таблица по дням (без оплаты за рекламу)
 select
     visit_date,
     sum(visitors_count) as visitors_count,
@@ -120,7 +122,7 @@ select
 from tbl_free
 group by visit_date
 order by visitors_count desc, leads_count desc, purchases_count desc;
------------------------------------------------------ 2 таблица по дням недели
+--------- 2 таблица по дням недели
 select
     extract(isodow from visit_date) as sort,
     to_char(visit_date, 'Day') as wkd,
@@ -140,7 +142,7 @@ select
 from tbl_answ
 group by wkd, extract(isodow from visit_date), utm_source
 order by extract(isodow from visit_date), visitors_count desc, leads_count desc;
------------------------------------------------------ 2.1 таблица по дням недели (без оплаты за рекламу)
+--------- 2.1 таблица по дням недели (без оплаты за рекламу)
 select
     extract(isodow from visit_date) as sort,
     to_char(visit_date, 'Day') as wkd,
@@ -160,7 +162,7 @@ select
 from tbl_free
 group by wkd, extract(isodow from visit_date), utm_source
 order by extract(isodow from visit_date), visitors_count desc, leads_count desc;
------------------------------------------------------ 3.1 таблица по месяцам (без оплаты за рекламу)
+--------- 3.1 таблица по месяцам (без оплаты за рекламу)
 select
     visit_date,
     utm_source,
@@ -170,7 +172,7 @@ select
 from tbl_free
 group by visit_date, utm_source
 order by visitors_count desc, leads_count desc, purchases_count desc;
------------------------------------------------------ 4.1 таблица - воронка (без оплаты рекламы)
+--------- 4.1 таблица - воронка (без оплаты рекламы)
 select
     'Пользователи' as stage,
     sum(visitors_count) as count
@@ -189,7 +191,7 @@ select
     'Покупатели' as stage,
     sum(purchases_count) as purchases_count
 from tbl_free;
------------------------------------------------------ 4 таблица - воронка + 5 и 6 таблицы - воронки с фильтрами where тут по яндексу/вконтакте
+--------- 4 таблица - воронка + 5 и 6 таблицы - воронки с фильтрами where тут по яндексу/вконтакте
 select
     'Пользователи' as stage,
     sum(visitors_count) as count
@@ -208,7 +210,7 @@ select
     'Покупатели' as stage,
     sum(purchases_count) as purchases_count
 from tbl_answ;
------------------------------------------------------ 7 таблица - расходы и доходы по дням недели
+--------- 7 таблица - расходы и доходы по дням недели
 select
     extract(isodow from visit_date) as sort,
     to_char(visit_date, 'Day') as wkd,
@@ -226,7 +228,7 @@ select
 from tbl_answ
 group by wkd, extract(isodow from visit_date)
 order by extract(isodow from visit_date);
------------------------------------------------------ 8 таблица - расходы по разным каналам в динамике
+--------- 8 таблица - расходы по разным каналам в динамике
 select
     visit_date,
     utm_source,
@@ -236,7 +238,7 @@ group by visit_date, utm_source
 having sum(total_cost) > 0
 order by visit_date, daily_spent desc;
 
------------------------------------------------------ 9 таблица - затраты на рекл \ прибыль
+--------- 9 таблица - затраты на рекл \ прибыль
 select
     utm_source,
     sum(total_cost) as total_cost,
@@ -245,7 +247,7 @@ from tbl_answ
 group by utm_source
 order by sum(total_cost) desc, sum(revenue) desc limit 4;
 
------------------------------------------------------ 10 таблица - cpu, cpl, cppu, roi
+--------- 10 таблица - cpu, cpl, cppu, roi
 select
     utm_source,
     round(sum(total_cost) / sum(visitors_count), 2) as cpu,
@@ -254,7 +256,7 @@ select
     round((sum(revenue) - sum(total_cost)) / sum(total_cost) * 100, 2) as roi
 from tbl_answ
 group by utm_source;
------------------------------------------------------ 11 таблица - cpu, cpl, cppu, roi по utm_campaign
+--------- 11 таблица - cpu, cpl, cppu, roi по utm_campaign
 ,
 tbl_cost_revenue_utm_campaign as (
 	select

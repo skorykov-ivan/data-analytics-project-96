@@ -89,13 +89,13 @@ with last_visits as (
 )
 
 select
-    date(lv.last_date) as visit_date,
     s.source as utm_source,
+    date(lv.last_date) as visit_date,
     count(distinct s.visitor_id) as visitors_count,
     count(distinct l.lead_id) as leads_count,
     count(distinct s.visitor_id) filter (
         where l.status_id = 142
-        ) as purchases_count,
+    ) as purchases_count,
     sum(l.amount) as revenue
 from last_visits as lv
 inner join sessions as s
@@ -261,8 +261,8 @@ select
 from tbl_answ
 group by utm_source;
 --------- 11 таблица - cpu, cpl, cppu, roi по utm_campaign
------ нужно поставить запятую после CTE tbl_answ
-tbl_cost_revenue_utm_campaign as (
+----- нужно поставить запятую после CTE tbl_answ и убрать тут with
+with tbl_cost_revenue_utm_campaign as (
 	select
 	    utm_source,
 	    utm_medium,

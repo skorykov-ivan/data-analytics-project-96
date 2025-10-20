@@ -1,6 +1,6 @@
+with last_visits as (
 -- Основная таблица для запросов с платной рекламой
 -- нет пометки'(без оплаты за рекламу)'
-with last_visits as (
     select
         visitor_id,
         max(visit_date) as last_date

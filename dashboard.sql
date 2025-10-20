@@ -110,7 +110,7 @@ tbl_free as (
 --Ниже 2 строчки запроса из таблицы для прохождения проверки
 
 select *
-from aggregate_last_paid_click;
+from tbl_free;
 --------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
     visit_date,
@@ -414,9 +414,9 @@ select
     tcruc.purchases_count,
     tcruc.total_cost,
     tcruc.revenue,
-    row_number() 
+    row_number()
         over (order by (tcruc.revenue - tcruc.total_cost) desc
-    ) as place,
+        ) as place,
     case
         when tcruc.visitors_count = 0 then 0
         else round(tcruc.total_cost / tcruc.visitors_count, 2)
@@ -430,9 +430,10 @@ select
         else round(tcruc.total_cost / tcruc.purchases_count, 2)
     end as cppu,
     case
-        when tcruc.total_cost = 0 then 0
-        else round((tcruc.revenue - tcruc.total_cost
-            ) / tcruc.total_cost * 100, 2) end as roi,
+        when tcruc.total_cost = 0 then 0 else round(
+            (tcruc.revenue - tcruc.total_cost
+        ) / tcruc.total_cost * 100, 2
+    ) end as roi,
     (tcruc.revenue - tcruc.total_cost) as net_profit,
     coalesce(tl90.close_leads_90perc, 0) as close_leads_90perc,
     sum(tl90.close_leads_90perc) over () / count(

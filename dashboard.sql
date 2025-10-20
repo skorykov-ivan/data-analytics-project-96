@@ -107,8 +107,8 @@ tbl_free as (
         on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
     group by date(lv.last_date), s.source
 )
---Ниже 2 строчки запроса из таблицы для прохождения проверки
-select utm_source
+
+select utm_source --Эти 2 строчки запроса из таблицы для прохождения проверки
 from tbl_free;
 --------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
@@ -433,7 +433,7 @@ select
             (
             tcruc.revenue - tcruc.total_cost
             ) / tcruc.total_cost * 100, 2
-        )
+                )
     end as roi,
     (tcruc.revenue - tcruc.total_cost) as net_profit,
     coalesce(tl90.close_leads_90perc, 0) as close_leads_90perc,

@@ -75,9 +75,8 @@ aggregate_last_paid_click as (
         t_ag.visitors_count desc, t_ag.utm_source asc,
         t_ag.utm_medium asc, t_ag.utm_campaign asc
 )
-
-select *
-from aggregate_last_paid_click
+--Ниже строчка запроса из таблицы для прохождения проверки
+select * from aggregate_last_paid_click
 --------- Основная таблица для запросов без оплаты за рекламу
 --------- с пометкой '(без оплаты за рекламу)'
 with last_visits as (
@@ -106,6 +105,8 @@ tbl_free as (
         on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
     group by date(lv.last_date), s.source
 )
+--Ниже строчка запроса из таблицы для прохождения проверки
+select * from aggregate_last_paid_click
 --------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
     visit_date,
@@ -376,7 +377,7 @@ tbl_last_clicks as (
         l.closing_reason,
         l.status_id,
         date(l.created_at) - date(visit_date) as diff_lids_day --для подсчёта
---закрытия 90% закрытия лидов
+    --закрытия 90% закрытия лидов
     from sessions as s
     inner join last_visits as lv
         on s.visitor_id = lv.visitor_id and s.visit_date = lv.last_date
@@ -389,7 +390,7 @@ tbl_last_clicks as (
 ),
 
 tbl_leads_90perc as (
-    select 
+    select
         utm_source,
         utm_medium,
         utm_campaign,
@@ -401,38 +402,38 @@ tbl_leads_90perc as (
 )
 
 select
-	row_number() over (order by (revenue - total_cost) desc) as place,
     tcruc.utm_source,
     tcruc.utm_medium,
     tcruc.utm_campaign,
-    visitors_count,
-    leads_count,
-    purchases_count,
-    total_cost,
-    revenue,
+    tcruc.visitors_count,
+    tcruc.leads_count,
+    tcruc.purchases_count,
+    tcruc.total_cost,
+    tcruc.revenue,
+    row_number() over (order by (tcruc.revenue - tcruc.total_cost) desc) as place,
     case
         when visitors_count = 0 then 0
-        else round(total_cost / visitors_count, 2)
+        else round(tcruc.total_cost / tcruc.visitors_count, 2)
     end as cpu,
     case
-        when leads_count = 0 then 0
-        else round(total_cost / leads_count, 2)
+        when tcruc.leads_count = 0 then 0
+        else round(tcruc.total_cost / tcruc.leads_count, 2)
     end as cpl,
     case
-        when purchases_count = 0 then 0
-        else round(total_cost / purchases_count, 2)
+        when tcruc.purchases_count = 0 then 0
+        else round(tcruc.total_cost / tcruc.purchases_count, 2)
     end as cppu,
     case
-        when total_cost = 0 then 0
-        else round((revenue - total_cost) / total_cost * 100, 2)
+        when tcruc.total_cost = 0 then 0
+        else round((tcruc.revenue - tcruc.total_cost) / tcruc.total_cost * 100, 2)
     end as roi,
-    (revenue - total_cost) as net_profit,
-    coalesce(close_leads_90perc, 0) as close_leads_90perc,
-    sum(close_leads_90perc) over() /count(
-        case when close_leads_90perc != 0 then 1 end) over() as middle_90_perc
+    (tcruc.revenue - tcruc.total_cost) as net_profit,
+    coalesce(tl90.close_leads_90perc, 0) as close_leads_90perc,
+    sum(tl90.close_leads_90perc) over() /count(
+        case when tl90.close_leads_90perc != 0 then 1 end) over() as middle_90_perc
 from tbl_cost_revenue_utm_campaign as tcruc
 left join tbl_leads_90perc as tl90
     on tcruc.utm_source = tl90.utm_source
     and tcruc.utm_medium = tl90.utm_medium
     and tcruc.utm_campaign = tl90.utm_campaign
-order by net_profit desc;
+order by tcruc.net_profit desc;

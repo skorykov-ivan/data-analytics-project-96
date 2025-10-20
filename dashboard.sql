@@ -279,9 +279,6 @@ tbl_aggr as (
         s.source as utm_source,
         s.medium as utm_medium,
         s.campaign as utm_campaign,
-        percentile_disc(0.9) within group (
-            order by date(l.created_at) - date(visit_date)
-        ) as close_leads_90perc, -- тут считаем закрытие 90% лидов
         date(lv.last_date) as visit_date,
         count(distinct s.visitor_id) as visitors_count,
         count(distinct l.lead_id) as leads_count,
@@ -329,8 +326,7 @@ aggregate_last_paid_click as (
         ads.total_cost,
         t_ag.leads_count,
         t_ag.purchases_count,
-        t_ag.revenue,
-        close_leads_90perc
+        t_ag.revenue
     from tbl_aggr as t_ag
     left join tbl_ads as ads
         on
@@ -350,26 +346,62 @@ tbl_cost_revenue_utm_campaign as (
         utm_source,
         utm_medium,
         utm_campaign,
-        close_leads_90perc,
         sum(visitors_count) as visitors_count,
         sum(leads_count) as leads_count,
         sum(purchases_count) as purchases_count,
         coalesce(sum(total_cost), 0) as total_cost,
         coalesce(sum(revenue), 0) as revenue
     from aggregate_last_paid_click
-    group by utm_source, utm_medium, utm_campaign, close_leads_90perc
+    group by utm_source, utm_medium, utm_campaign
     having coalesce(sum(total_cost), 0) > 0
     order by
         visitors_count desc,
         leads_count desc,
         purchases_count desc
+),
+
+tbl_last_clicks as (
+    select
+        s.visitor_id,
+        lv.last_date as visit_date,
+        s.source as utm_source,
+        s.medium as utm_medium,
+        s.campaign as utm_campaign,
+        l.lead_id,
+        l.created_at,
+        l.amount,
+        l.closing_reason,
+        l.status_id,
+        date(l.created_at) - date(visit_date) as diff_lids_day --для подсчёта
+--закрытия 90% закрытия лидов
+    from sessions as s
+    inner join last_visits as lv
+        on s.visitor_id = lv.visitor_id and s.visit_date = lv.last_date
+    left join leads as l
+        on s.visitor_id = l.visitor_id and s.visit_date <= l.created_at
+    where s.medium != 'organic' and s.source in ('vk', 'yandex')
+    order by
+        l.amount desc nulls last, visit_date asc, utm_source asc,
+        utm_medium asc, utm_campaign asc
+),
+
+tbl_leads_90perc as (
+    select 
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        percentile_disc(0.9) within group (order by diff_lids_day
+        ) as close_leads_90perc -- тут считаем закрытие 90% лидов
+    from tbl_last_clicks
+    where status_id = 142
+    group by utm_source, utm_medium, utm_campaign
 )
 
 select
 	row_number() over (order by (revenue - total_cost) desc) as place,
-    utm_source,
-    utm_medium,
-    utm_campaign,
+    tcruc.utm_source,
+    tcruc.utm_medium,
+    tcruc.utm_campaign,
     visitors_count,
     leads_count,
     purchases_count,
@@ -392,6 +424,12 @@ select
         else round((revenue - total_cost) / total_cost * 100, 2)
     end as roi,
     (revenue - total_cost) as net_profit,
-    close_leads_90perc
-from tbl_cost_revenue_utm_campaign
+    coalesce(close_leads_90perc, 0) as close_leads_90perc,
+    sum(close_leads_90perc) over() /count(
+        case when close_leads_90perc != 0 then 1 end) over() as middle_90_perc
+from tbl_cost_revenue_utm_campaign as tcruc
+left join tbl_leads_90perc as tl90
+    on tcruc.utm_source = tl90.utm_source
+    and tcruc.utm_medium = tl90.utm_medium
+    and tcruc.utm_campaign = tl90.utm_campaign
 order by net_profit desc;

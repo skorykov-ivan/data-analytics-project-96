@@ -76,7 +76,8 @@ aggregate_last_paid_click as (
         t_ag.utm_medium asc, t_ag.utm_campaign asc
 )
 --Ниже строчка запроса из таблицы для прохождения проверки
-select * from aggregate_last_paid_click
+select *
+from aggregate_last_paid_click
 --------- Основная таблица для запросов без оплаты за рекламу
 --------- с пометкой '(без оплаты за рекламу)'
 with last_visits as (
@@ -106,7 +107,8 @@ tbl_free as (
     group by date(lv.last_date), s.source
 )
 --Ниже строчка запроса из таблицы для прохождения проверки
-select * from aggregate_last_paid_click
+select *
+from aggregate_last_paid_click
 --------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
     visit_date,
@@ -410,9 +412,10 @@ select
     tcruc.purchases_count,
     tcruc.total_cost,
     tcruc.revenue,
-    row_number() over (order by (tcruc.revenue - tcruc.total_cost) desc) as place,
+    row_number() over (order by (tcruc.revenue - tcruc.total_cost) desc
+    ) as place,
     case
-        when visitors_count = 0 then 0
+        when tcruc.visitors_count = 0 then 0
         else round(tcruc.total_cost / tcruc.visitors_count, 2)
     end as cpu,
     case
@@ -425,12 +428,14 @@ select
     end as cppu,
     case
         when tcruc.total_cost = 0 then 0
-        else round((tcruc.revenue - tcruc.total_cost) / tcruc.total_cost * 100, 2)
+        else round((tcruc.revenue - tcruc.total_cost
+        ) / tcruc.total_cost * 100, 2)
     end as roi,
     (tcruc.revenue - tcruc.total_cost) as net_profit,
     coalesce(tl90.close_leads_90perc, 0) as close_leads_90perc,
     sum(tl90.close_leads_90perc) over() /count(
-        case when tl90.close_leads_90perc != 0 then 1 end) over() as middle_90_perc
+        case when tl90.close_leads_90perc != 0 then 1 end) over(
+    ) as middle_90_perc
 from tbl_cost_revenue_utm_campaign as tcruc
 left join tbl_leads_90perc as tl90
     on tcruc.utm_source = tl90.utm_source

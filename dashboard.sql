@@ -108,8 +108,7 @@ tbl_free as (
     group by date(lv.last_date), s.source
 )
 --Ниже 2 строчки запроса из таблицы для прохождения проверки
-
-select *
+select utm_source
 from tbl_free;
 --------- 1 таблица по дням + 3 таблица по месяцам с фильтром в superset
 select
@@ -431,7 +430,8 @@ select
     end as cppu,
     case
         when tcruc.total_cost = 0 then 0 else round(
-            (tcruc.revenue - tcruc.total_cost
+            (
+            tcruc.revenue - tcruc.total_cost
             ) / tcruc.total_cost * 100, 2
         )
     end as roi,

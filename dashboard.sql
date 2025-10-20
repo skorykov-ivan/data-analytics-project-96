@@ -1,6 +1,6 @@
-with last_visits as (
 -- Основная таблица для запросов с платной рекламой
 -- нет пометки'(без оплаты за рекламу)'
+with last_visits as (
     select
         visitor_id,
         max(visit_date) as last_date
@@ -75,6 +75,9 @@ aggregate_last_paid_click as (
         t_ag.visitors_count desc, t_ag.utm_source asc,
         t_ag.utm_medium asc, t_ag.utm_campaign asc
 )
+
+select *
+from aggregate_last_paid_click
 --------- Основная таблица для запросов без оплаты за рекламу
 --------- с пометкой '(без оплаты за рекламу)'
 with last_visits as (

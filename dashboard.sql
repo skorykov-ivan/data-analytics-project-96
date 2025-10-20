@@ -431,9 +431,9 @@ select
     case
         when tcruc.total_cost = 0 then 0 else round(
             (
-            tcruc.revenue - tcruc.total_cost
+                tcruc.revenue - tcruc.total_cost
             ) / tcruc.total_cost * 100, 2
-                )
+        )
     end as roi,
     (tcruc.revenue - tcruc.total_cost) as net_profit,
     coalesce(tl90.close_leads_90perc, 0) as close_leads_90perc,

@@ -1,30 +1,39 @@
-with last_visits as (
+with rank_date as (
     select
-        visitor_id,
-        max(visit_date) as last_date
-    from sessions
-    where medium != 'organic'
-    group by visitor_id
+        s.visitor_id,
+        s.visit_date,
+        s.source as utm_source,
+        s.medium as utm_medium,
+        s.campaign as utm_campaign,
+        l.lead_id,
+        l.created_at,
+        l.amount,
+        l.closing_reason,
+        l.status_id,
+        row_number() over (
+            partition by s.visitor_id order by s.visit_date desc
+        ) as rn
+    from sessions as s
+    left join leads as l
+        on s.visitor_id = l.visitor_id and s.visit_date <= l.created_at
+    where s.medium != 'organic'
 ),
 
 tbl_aggr as (
     select
-        s.source as utm_source,
-        s.medium as utm_medium,
-        s.campaign as utm_campaign,
-        date(lv.last_date) as visit_date,
-        count(distinct s.visitor_id) as visitors_count,
-        count(distinct l.lead_id) as leads_count,
-        count(distinct s.visitor_id) filter (
-            where l.status_id = 142
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        date(visit_date) as visit_date,
+        count(distinct visitor_id) as visitors_count,
+        count(distinct lead_id) as leads_count,
+        count(distinct visitor_id) filter (
+            where status_id = 142
         ) as purchases_count,
-        sum(l.amount) as revenue
-    from last_visits as lv
-    inner join sessions as s
-        on lv.visitor_id = s.visitor_id and lv.last_date = s.visit_date
-    left join leads as l
-        on lv.visitor_id = l.visitor_id and lv.last_date <= l.created_at
-    group by date(lv.last_date), s.source, s.medium, s.campaign
+        sum(amount) as revenue
+    from rank_date
+    where rn = 1
+    group by date(visit_date), utm_source, utm_medium, utm_campaign
 ),
 
 tbl_ads as (
